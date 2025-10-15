@@ -1,0 +1,72 @@
+/* NetworkStatus.css */
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.network-status-banner {
+  animation: slideIn 0.3s ease-out;
+  z-index: 1050;
+}
+
+.network-status-pill {
+  transition: transform 0.2s ease;
+}
+
+.network-status-pill:hover {
+  transform: translateY(-2px);
+}
+
+.status-dot {
+  transition: all 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .network-status-banner .alert {
+    border-radius: 0;
+    padding: 12px 16px;
+  }
+  
+  .network-status-pill {
+    bottom: 12px;
+    left: 12px;
+  }
+}
+
+/* Ensure content doesn't get hidden behind the banner */
+body.has-network-banner {
+  padding-top: 60px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .network-status-pill > div {
+    background: #1F2937 !important;
+    color: #F9FAFB !important;
+    border-color: #4B5563 !important;
+  }
+  
+  .network-status-pill small {
+    color: #F9FAFB !important;
+  }
+}

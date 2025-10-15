@@ -1,0 +1,16 @@
+.badge {
+  padding: 2px 5px;
+  border-radius: 3px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.badge-xcess {
+  background-color: #1cc88a;
+}
+
+.badge-short {
+  background-color: #e74a3b;
+}

@@ -1,0 +1,15 @@
+/* Expiry status background colors for dropdown items */
+.dropdown-item.expiry-expired {
+  background-color: #ff0000 !important; /* Light red for expired */
+  border-left: 4px solid #ff0000;
+}
+
+.dropdown-item.expiry-danger {
+  background-color: #fd7e14 !important; /* Light yellow for critical (≤30 days) */
+  border-left: 4px solid #fd7e14;
+}
+
+.dropdown-item.expiry-warning {
+  background-color: #ffc107 !important; /* Light orange for warning (≤90 days) */
+  border-left: 4px solid #ffc107;
+}

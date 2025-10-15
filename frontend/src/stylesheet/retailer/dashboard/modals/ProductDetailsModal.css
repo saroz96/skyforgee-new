@@ -1,0 +1,112 @@
+/* Product styles */
+#productDetailsContainer {
+    font-size: 14px;
+}
+
+#productDetailsHeader, .product-row {
+    display: flex;
+    width: 100%;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+#productDetailsHeader {
+    font-weight: bold;
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.product-cell {
+    flex: 1;
+    padding: 0 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-name {
+    flex: 3 !important;
+}
+
+.product-row {
+    cursor: pointer;
+}
+
+.product-row:hover {
+    background-color: #f8f9fa !important;
+}
+
+.product-row.active {
+    background-color: #518CE8 !important;
+    color: white !important;
+}
+
+/* Expiry status styles */
+.expired {
+    background-color: #ffdddd;
+}
+
+.danger {
+    background-color: #ffcccc;
+}
+
+.warning {
+    background-color: #fff3cd;
+}
+
+.vatable {
+    background-color: lightgreen;
+}
+
+.vatExempt {
+    background-color: lightyellow;
+}
+
+.expiry-status {
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.expiry-status.expired {
+    background-color: #dc3545;
+    color: white;
+}
+
+.expiry-status.danger {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.expiry-status.warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.expiry-badge-modal {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.expiry-badge-modal.expired {
+    background-color: #dc3545;
+    color: white;
+}
+
+.expiry-badge-modal.danger {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.expiry-badge-modal.warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.expiry-badge-modal.safe {
+    background-color: #28a745;
+    color: white;
+}

@@ -1,0 +1,94 @@
+/* ContactModal.css */
+.modal-custom-width {
+    max-width: calc(100% - 400px) !important;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Search input */
+.search-input {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+}
+
+/* Contacts container */
+.contacts-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+/* Contacts header */
+.contacts-header {
+    display: flex;
+    font-weight: bold;
+    padding: 0.5rem;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.header-cell {
+    font-weight: 600;
+    color: #495057;
+    flex: 1;
+    padding: 0.5rem;
+}
+
+/* Contacts list */
+.contacts-list {
+    overflow-y: auto;
+    max-height: 60vh;
+}
+
+/* Contact row */
+.contact-row {
+    display: flex;
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.contact-row:hover {
+    background-color: #f1f3f5;
+}
+
+.contact-row.active {
+    background-color: #518CE8;
+    color: white;
+}
+
+/* Contact cell */
+.contact-cell {
+    flex: 1;
+    padding: 0 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    align-self: center;
+}
+
+/* Loading spinner */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .modal-custom-width {
+        max-width: 98vw !important;
+        width: 98% !important;
+    }
+    
+    .contact-cell {
+        font-size: 0.9rem;
+        padding: 0 0.25rem;
+    }
+}

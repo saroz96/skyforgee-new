@@ -1,0 +1,50 @@
+/* Quick Actions Styles */
+.action-btn {
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  height: 100%;
+  min-height: 90px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa !important;
+}
+
+.hover-effect {
+  transition: all 0.2s ease;
+  border-radius: 6px;
+}
+
+.hover-effect:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+.connectedSortable {
+  transition: all 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .action-btn {
+    min-height: 80px;
+    padding: 0.5rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-btn {
+    min-height: 70px;
+  }
+  
+  .action-btn i {
+    font-size: 1.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .action-btn span {
+    font-size: 0.8rem;
+  }
+}

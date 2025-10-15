@@ -1,0 +1,21 @@
+/* Hide the calendar icon in date inputs */
+.no-date-icon::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+/* For Firefox */
+.no-date-icon {
+    -moz-appearance: textfield;
+}
+.no-date-icon::-moz-calendar-picker-indicator {
+    display: none;
+}
+
+/* For Edge */
+.no-date-icon::-ms-clear {
+    display: none;
+}
+.no-date-icon::-ms-expand {
+    display: none;
+}

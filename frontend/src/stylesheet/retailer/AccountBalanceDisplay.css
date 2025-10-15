@@ -1,0 +1,28 @@
+/* AccountBalanceDisplay.css */
+.account-balance-display {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+}
+
+.account-balance-compact {
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.account-balance-compact .text-danger,
+.account-balance-compact .text-success {
+    font-weight: bold;
+}
+
+/* Input group styling */
+.input-group-text {
+    border-left: 0;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ensure the balance doesn't make the input too wide */
+.col-md-5.col-12 {
+    position: relative;
+}
