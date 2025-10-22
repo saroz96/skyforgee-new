@@ -652,7 +652,7 @@ const Header = () => {
                         {(user?.role === 'ADMINISTRATOR' || user?.role === 'Supervisor' || user?.role === 'Account' ||
                           user?.isAdmin || user?.menuPermissions?.get('debitNoteModify')) && (
                             <li className="menu-item">
-                              <Link to="/debitnote/finds">Edit</Link>
+                              <Link to="/retailer/debit-note/finds">Edit</Link>
                             </li>
                           )}
                         {(user?.role === 'ADMINISTRATOR' || user?.role === 'Supervisor' || user?.role === 'Account' ||

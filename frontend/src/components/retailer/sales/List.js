@@ -31,7 +31,7 @@ const SalesBillsList = () => {
             currentFiscalYear: null,
             bills: [],
             fromDate: '',
-            toDate: company.dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate
+            toDate: ''
         };
     });
 
@@ -57,6 +57,44 @@ const SalesBillsList = () => {
     });
 
     // Fetch company and fiscal year info when component mounts
+    // useEffect(() => {
+    //     const fetchInitialData = async () => {
+    //         try {
+    //             const response = await api.get('/api/my-company');
+    //             if (response.data.success) {
+    //                 const { company: companyData, currentFiscalYear } = response.data;
+
+    //                 // Set company info
+    //                 const dateFormat = companyData.dateFormat || 'english';
+    //                 setCompany({
+    //                     dateFormat,
+    //                     isVatExempt: companyData.isVatExempt || false,
+    //                     vatEnabled: companyData.vatEnabled !== false, // default true
+    //                     fiscalYear: currentFiscalYear || {}
+    //                 });
+
+    //                 // Set dates based on fiscal year
+    //                 if (currentFiscalYear?.startDate) {
+    //                     setData(prev => ({
+    //                         ...prev,
+    //                         fromDate: dateFormat === 'nepali'
+    //                             ? new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD')
+    //                             : new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD'),
+    //                         toDate: dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate,
+    //                         company: companyData,
+    //                         currentFiscalYear
+    //                     }));
+    //                 }
+    //             }
+    //         } catch (err) {
+    //             console.error('Error fetching initial data:', err);
+    //         }
+    //     };
+
+    //     fetchInitialData();
+    // }, []);
+
+    // Fetch company and fiscal year info when component mounts
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
@@ -73,14 +111,24 @@ const SalesBillsList = () => {
                         fiscalYear: currentFiscalYear || {}
                     });
 
-                    // Set dates based on fiscal year
-                    if (currentFiscalYear?.startDate) {
+                    // Check if we have draft dates
+                    const hasDraftDates = draftSave?.salesBillsData?.fromDate && draftSave?.salesBillsData?.toDate;
+
+                    if (!hasDraftDates && currentFiscalYear?.startDate) {
+                        // Only set default dates if we don't have draft dates
                         setData(prev => ({
                             ...prev,
                             fromDate: dateFormat === 'nepali'
                                 ? new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD')
                                 : new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD'),
                             toDate: dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate,
+                            company: companyData,
+                            currentFiscalYear
+                        }));
+                    } else {
+                        // If we have draft data, ensure company info is updated
+                        setData(prev => ({
+                            ...prev,
                             company: companyData,
                             currentFiscalYear
                         }));
@@ -128,10 +176,12 @@ const SalesBillsList = () => {
             salesBillsSearch: {
                 searchQuery,
                 paymentModeFilter,
-                selectedRowIndex
+                selectedRowIndex,
+                fromDate: data.fromDate,
+                toDate: data.toDate
             }
         });
-    }, [data, searchQuery, paymentModeFilter, selectedRowIndex]);
+    }, [data, searchQuery, paymentModeFilter, selectedRowIndex, data.fromDate, data.toDate]);
 
     // Fetch data when generate report is clicked
     useEffect(() => {
@@ -253,11 +303,6 @@ const SalesBillsList = () => {
                 case 'ArrowDown':
                     e.preventDefault();
                     setSelectedRowIndex(prev => Math.min(filteredBills.length - 1, prev + 1));
-                    break;
-                case 'Enter':
-                    if (selectedRowIndex >= 0 && selectedRowIndex < filteredBills.length) {
-                        navigate(`/retailer/sales/${filteredBills[selectedRowIndex]._id}/print`);
-                    }
                     break;
                 default:
                     break;
@@ -484,7 +529,7 @@ const SalesBillsList = () => {
     };
 
     const handleRowDoubleClick = (billId) => {
-        navigate(`/bills/${billId}/print`);
+        navigate(`/retailer/sales/${filteredBills[selectedRowIndex]._id}/print`);
     };
 
     const handleKeyDown = (e, nextFieldId) => {

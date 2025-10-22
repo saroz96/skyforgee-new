@@ -20,6 +20,87 @@ const ensureFiscalYear = require('../../middleware/checkActiveFiscalYear');
 const checkFiscalYearDateRange = require('../../middleware/checkFiscalYearDateRange');
 const checkDemoPeriod = require('../../middleware/checkDemoPeriod');
 
+// // GET - Show list of journal vouchers (JSON API for React)
+// router.get('/journal/register', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
+//     try {
+//         if (req.tradeType === 'retailer') {
+//             const companyId = req.session.currentCompany;
+//             const currentCompanyName = req.session.currentCompanyName;
+//             const currentCompany = await Company.findById(new ObjectId(companyId));
+//             const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+
+//             // Check if fiscal year is already in the session or available in the company
+//             let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
+//             let currentFiscalYear = null;
+
+//             if (fiscalYear) {
+//                 // Fetch the fiscal year from the database if available in the session
+//                 currentFiscalYear = await FiscalYear.findById(fiscalYear);
+//             }
+
+//             // If no fiscal year is found in session or currentCompany, throw an error
+//             if (!currentFiscalYear && company.fiscalYear) {
+//                 currentFiscalYear = company.fiscalYear;
+
+//                 // Set the fiscal year in the session for future requests
+//                 req.session.currentFiscalYear = {
+//                     id: currentFiscalYear._id.toString(),
+//                     startDate: currentFiscalYear.startDate,
+//                     endDate: currentFiscalYear.endDate,
+//                     name: currentFiscalYear.name,
+//                     dateFormat: currentFiscalYear.dateFormat,
+//                     isActive: currentFiscalYear.isActive
+//                 };
+
+//                 // Assign fiscal year ID for use
+//                 fiscalYear = req.session.currentFiscalYear.id;
+//             }
+
+//             if (!fiscalYear) {
+//                 return res.status(400).json({
+//                     success: false,
+//                     error: 'No fiscal year found in session or company.'
+//                 });
+//             }
+
+//             const journalVouchers = await JournalVoucher.find({ company: req.session.currentCompany })
+//                 .populate('debitAccounts.account creditAccounts.account')
+//                 .lean()
+//                 .exec();
+
+//             return res.json({
+//                 success: true,
+//                 data: {
+//                     company,
+//                     currentFiscalYear,
+//                     journalVouchers,
+//                     currentCompanyName,
+//                     currentCompany,
+//                     user: req.user,
+//                     isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+//                 },
+//                 meta: {
+//                     title: 'View Journal',
+//                     body: 'retailer >> journal >> view journal',
+//                     theme: req.user.preferences?.theme || 'light' // Default to light if not set
+//                 }
+//             });
+//         } else {
+//             return res.status(403).json({
+//                 success: false,
+//                 error: 'Access denied for this trade type'
+//             });
+//         }
+//     } catch (error) {
+//         console.error('Error in journal-list endpoint:', error);
+//         return res.status(500).json({
+//             success: false,
+//             error: 'Internal server error',
+//             details: error.message
+//         });
+//     }
+// });
+
 // GET - Show list of journal vouchers (JSON API for React)
 router.get('/journal/register', ensureAuthenticated, ensureCompanySelected, ensureTradeType, async (req, res) => {
     try {
@@ -28,6 +109,13 @@ router.get('/journal/register', ensureAuthenticated, ensureCompanySelected, ensu
             const currentCompanyName = req.session.currentCompanyName;
             const currentCompany = await Company.findById(new ObjectId(companyId));
             const company = await Company.findById(companyId).select('renewalDate fiscalYear dateFormat').populate('fiscalYear');
+            const today = new Date();
+            const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD');
+            const companyDateFormat = currentCompany ? currentCompany.dateFormat : '';
+
+            // Extract dates from query parameters
+            let fromDate = req.query.fromDate ? req.query.fromDate : null;
+            let toDate = req.query.toDate ? req.query.toDate : null;
 
             // Check if fiscal year is already in the session or available in the company
             let fiscalYear = req.session.currentFiscalYear ? req.session.currentFiscalYear.id : null;
@@ -63,7 +151,47 @@ router.get('/journal/register', ensureAuthenticated, ensureCompanySelected, ensu
                 });
             }
 
-            const journalVouchers = await JournalVoucher.find({ company: req.session.currentCompany })
+            // If no date range provided, return basic info with empty journal vouchers
+            if (!fromDate || !toDate) {
+                return res.json({
+                    success: true,
+                    data: {
+                        company,
+                        currentFiscalYear,
+                        journalVouchers: [],
+                        nepaliDate,
+                        companyDateFormat,
+                        currentCompany,
+                        fromDate: req.query.fromDate || '',
+                        toDate: req.query.toDate || '',
+                        currentCompanyName,
+                        user: req.user,
+                        isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+                    },
+                    meta: {
+                        title: 'View Journal',
+                        body: 'retailer >> journal >> view journal',
+                        theme: req.user.preferences?.theme || 'light' // Default to light if not set
+                    }
+                });
+            }
+
+            // Build the query based on date range
+            let query = {
+                company: req.session.currentCompany,
+                fiscalYear: fiscalYear
+            };
+
+            if (fromDate && toDate) {
+                query.date = { $gte: fromDate, $lte: toDate };
+            } else if (fromDate) {
+                query.date = { $gte: fromDate };
+            } else if (toDate) {
+                query.date = { $lte: toDate };
+            }
+
+            const journalVouchers = await JournalVoucher.find(query)
+                .sort({ date: 1 })
                 .populate('debitAccounts.account creditAccounts.account')
                 .lean()
                 .exec();
@@ -74,15 +202,19 @@ router.get('/journal/register', ensureAuthenticated, ensureCompanySelected, ensu
                     company,
                     currentFiscalYear,
                     journalVouchers,
-                    currentCompanyName,
+                    nepaliDate,
+                    companyDateFormat,
                     currentCompany,
+                    fromDate: req.query.fromDate || '',
+                    toDate: req.query.toDate || '',
+                    currentCompanyName,
                     user: req.user,
                     isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
                 },
                 meta: {
                     title: 'View Journal',
                     body: 'retailer >> journal >> view journal',
-                    theme: req.user.preferences?.theme || 'light' // Default to light if not set
+                    theme: req.user.preferences?.theme || 'light'
                 }
             });
         } else {

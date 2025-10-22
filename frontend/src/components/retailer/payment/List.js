@@ -26,7 +26,7 @@ const PaymentsList = () => {
             currentFiscalYear: null,
             payments: [],
             fromDate: '',
-            toDate: company.dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate,
+            toDate: '',
             userPreferences: {
                 theme: 'light'
             },
@@ -58,6 +58,44 @@ const PaymentsList = () => {
     });
 
     // Fetch company and fiscal year info when component mounts
+    // useEffect(() => {
+    //     const fetchInitialData = async () => {
+    //         try {
+    //             const response = await api.get('/api/my-company');
+    //             if (response.data.success) {
+    //                 const { company: companyData, currentFiscalYear } = response.data;
+
+    //                 // Set company info
+    //                 const dateFormat = companyData.dateFormat || 'english';
+    //                 setCompany({
+    //                     dateFormat,
+    //                     isVatExempt: companyData.isVatExempt || false,
+    //                     vatEnabled: companyData.vatEnabled !== false, // default true
+    //                     fiscalYear: currentFiscalYear || {}
+    //                 });
+
+    //                 // Set dates based on fiscal year
+    //                 if (currentFiscalYear?.startDate) {
+    //                     setData(prev => ({
+    //                         ...prev,
+    //                         fromDate: dateFormat === 'nepali'
+    //                             ? new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD')
+    //                             : new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD'),
+    //                         toDate: dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate,
+    //                         company: companyData,
+    //                         currentFiscalYear
+    //                     }));
+    //                 }
+    //             }
+    //         } catch (err) {
+    //             console.error('Error fetching initial data:', err);
+    //         }
+    //     };
+
+    //     fetchInitialData();
+    // }, []);
+
+    // Fetch company and fiscal year info when component mounts
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
@@ -74,14 +112,24 @@ const PaymentsList = () => {
                         fiscalYear: currentFiscalYear || {}
                     });
 
-                    // Set dates based on fiscal year
-                    if (currentFiscalYear?.startDate) {
+                    // Check if we have draft dates
+                    const hasDraftDates = draftSave?.paymentsData?.fromDate && draftSave?.paymentsData?.toDate;
+
+                    if (!hasDraftDates && currentFiscalYear?.startDate) {
+                        // Only set default dates if we don't have draft dates
                         setData(prev => ({
                             ...prev,
                             fromDate: dateFormat === 'nepali'
                                 ? new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD')
                                 : new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD'),
                             toDate: dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate,
+                            company: companyData,
+                            currentFiscalYear
+                        }));
+                    } else {
+                        // If we have draft data, ensure company info is updated
+                        setData(prev => ({
+                            ...prev,
                             company: companyData,
                             currentFiscalYear
                         }));
@@ -122,61 +170,116 @@ const PaymentsList = () => {
             paymentsSearch: {
                 searchQuery,
                 paymentAccountFilter,
-                selectedRowIndex
+                selectedRowIndex,
+                // Include date filters in search state for easy access
+            fromDate: data.fromDate,
+            toDate: data.toDate
             }
         });
-    }, [data, searchQuery, paymentAccountFilter, selectedRowIndex]);
+    }, [data, searchQuery, paymentAccountFilter, selectedRowIndex, data.fromDate, data.toDate]);
 
     // Fetch data when generate report is clicked
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!shouldFetch) return;
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         if (!shouldFetch) return;
 
-            try {
-                setLoading(true);
-                const params = new URLSearchParams();
-                if (data.fromDate) params.append('fromDate', data.fromDate);
-                if (data.toDate) params.append('toDate', data.toDate);
+    //         try {
+    //             setLoading(true);
+    //             const params = new URLSearchParams();
+    //             if (data.fromDate) params.append('fromDate', data.fromDate);
+    //             if (data.toDate) params.append('toDate', data.toDate);
 
-                const response = await api.get(`/api/retailer/payments/register?${params.toString()}`);
-                setData(response.data.data);
-                setError(null);
-                // Don't reset selection when new data loads if we have a saved position
-                if (!draftSave?.paymentsSearch?.selectedRowIndex) {
-                    setSelectedRowIndex(0);
-                }
-            } catch (err) {
-                setError(err.response?.data?.error || 'Failed to fetch payments');
-            } finally {
-                setLoading(false);
-                setShouldFetch(false);
+    //             const response = await api.get(`/api/retailer/payments/register?${params.toString()}`);
+    //             setData(response.data.data);
+    //             setError(null);
+    //             // Don't reset selection when new data loads if we have a saved position
+    //             if (!draftSave?.paymentsSearch?.selectedRowIndex) {
+    //                 setSelectedRowIndex(0);
+    //             }
+    //         } catch (err) {
+    //             setError(err.response?.data?.error || 'Failed to fetch payments');
+    //         } finally {
+    //             setLoading(false);
+    //             setShouldFetch(false);
+    //         }
+    //     };
+
+    //     fetchData();
+    // }, [shouldFetch, data.fromDate, data.toDate]);
+
+    // Fetch data when generate report is clicked
+useEffect(() => {
+    const fetchData = async () => {
+        if (!shouldFetch) return;
+
+        try {
+            setLoading(true);
+            const params = new URLSearchParams();
+            if (data.fromDate) params.append('fromDate', data.fromDate);
+            if (data.toDate) params.append('toDate', data.toDate);
+
+            const response = await api.get(`/api/retailer/payments/register?${params.toString()}`);
+            setData(response.data.data);
+            setError(null);
+            // Don't reset selection when new data loads if we have a saved position
+            if (!draftSave?.paymentsSearch?.selectedRowIndex) {
+                setSelectedRowIndex(0);
             }
-        };
+        } catch (err) {
+            setError(err.response?.data?.error || 'Failed to fetch payments');
+        } finally {
+            setLoading(false);
+            setShouldFetch(false);
+        }
+    };
 
-        fetchData();
-    }, [shouldFetch, data.fromDate, data.toDate]);
+    fetchData();
+}, [shouldFetch, data.fromDate, data.toDate]);
 
     // Filter payments based on search and payment account
-    useEffect(() => {
-        const filtered = data.payments.filter(payment => {
-            const matchesSearch =
-                payment.billNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                payment.account?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                payment.user?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    // useEffect(() => {
+    //     const filtered = data.payments.filter(payment => {
+    //         const matchesSearch =
+    //             payment.billNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    //             payment.account?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    //             payment.user?.name?.toLowerCase().includes(searchQuery.toLowerCase());
 
-            const matchesPaymentAccount =
-                paymentAccountFilter === '' ||
-                (payment.paymentAccount?.name?.toLowerCase() === paymentAccountFilter.toLowerCase());
+    //         const matchesPaymentAccount =
+    //             paymentAccountFilter === '' ||
+    //             (payment.paymentAccount?.name?.toLowerCase() === paymentAccountFilter.toLowerCase());
 
-            return matchesSearch && matchesPaymentAccount;
-        });
+    //         return matchesSearch && matchesPaymentAccount;
+    //     });
 
-        setFilteredPayments(filtered);
-        // Reset selected row when filters change, but only if we don't have a saved position
-        if (!draftSave?.paymentsSearch?.selectedRowIndex) {
-            setSelectedRowIndex(0);
-        }
-    }, [data.payments, searchQuery, paymentAccountFilter]);
+    //     setFilteredPayments(filtered);
+    //     // Reset selected row when filters change, but only if we don't have a saved position
+    //     if (!draftSave?.paymentsSearch?.selectedRowIndex) {
+    //         setSelectedRowIndex(0);
+    //     }
+    // }, [data.payments, searchQuery, paymentAccountFilter]);
+
+    // Filter payments based on search and payment account
+useEffect(() => {
+    const filtered = data.payments.filter(payment => {
+        const matchesSearch =
+            payment.billNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            payment.account?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            payment.user?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesPaymentAccount =
+            paymentAccountFilter === '' ||
+            (payment.paymentAccount?.name?.toLowerCase() === paymentAccountFilter.toLowerCase());
+
+        return matchesSearch && matchesPaymentAccount;
+    });
+
+    setFilteredPayments(filtered);
+    
+    // Reset selected row when filters change, but only if we don't have a saved position
+    if (!draftSave?.paymentsSearch?.selectedRowIndex) {
+        setSelectedRowIndex(0);
+    }
+}, [data.payments, searchQuery, paymentAccountFilter]);
 
     // Calculate totals when filtered payments change
     useEffect(() => {
@@ -211,11 +314,6 @@ const PaymentsList = () => {
                 case 'ArrowDown':
                     e.preventDefault();
                     setSelectedRowIndex(prev => Math.min(filteredPayments.length - 1, prev + 1));
-                    break;
-                case 'Enter':
-                    if (selectedRowIndex >= 0 && selectedRowIndex < filteredPayments.length) {
-                        navigate(`/retailer/payments/${filteredPayments[selectedRowIndex]._id}/print`);
-                    }
                     break;
                 default:
                     break;
@@ -424,7 +522,7 @@ const PaymentsList = () => {
     };
 
     const handleRowDoubleClick = (paymentId) => {
-        navigate(`/payments/${paymentId}/print`);
+        navigate(`/retailer/payments/${filteredPayments[selectedRowIndex]._id}/print`);
     };
 
     const handleKeyDown = (e, nextFieldId) => {

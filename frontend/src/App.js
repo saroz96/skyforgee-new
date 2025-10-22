@@ -108,6 +108,9 @@ import ChangeNewFiscalYear from './components/fiscalYear/ChangeNewFiscalYear';
 import SplitCompany from './components/company/SplitCompany';
 import DayWiseAgeing from './components/retailer/ageingReport/DayWiseAgeing';
 import BackupPages from './components/backups/BackupPages';
+import DebitNotePrint from './components/retailer/debitNote/Print';
+import EditDebitNote from './components/retailer/debitNote/EditDebitNote';
+import DebitNoteNumberForm from './components/retailer/debitNote/VoucherNumber';
 
 function AppContent() {
   const { currentUser } = useAuth();
@@ -816,11 +819,35 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/retailer/debit-note/finds"
+              element={
+                <ProtectedRoute>
+                  <DebitNoteNumberForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/retailer/debit-note/:id"
+              element={
+                <ProtectedRoute>
+                  <EditDebitNote />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/retailer/debit-note/:id/print"
+              element={
+                <ProtectedRoute>
+                  <DebitNotePrint />
+                </ProtectedRoute>
+              }
+            />
 
             {/**======================================================*/}
 
 
-            {/**===================== Journal Voucher ================ */}
+            {/**===================== Voucher Configuration ================ */}
             <Route
               path="/retailer/voucherConfiguration"
               element={

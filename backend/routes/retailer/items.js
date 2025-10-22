@@ -33,6 +33,102 @@ const BarcodePreference = require('../../models/retailer/barcodePreference');
 // const { createCanvas, loadImage } = require('canvas');
 
 
+// router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, async (req, res) => {
+//     try {
+//         const companyId = req.session.currentCompany;
+
+//         // Parallelize all independent queries
+//         const [
+//             company,
+//             items,
+//             categories,
+//             itemsCompanies,
+//             units,
+//             mainUnits,
+//             composition
+//         ] = await Promise.all([
+//             Company.findById(companyId).select('renewalDate fiscalYear dateFormat vatEnabled').lean(),
+//             Item.find({ company: companyId })
+//                 .populate('category', 'name')
+//                 .populate('itemsCompany', 'name')
+//                 .populate('unit', 'name')
+//                 .populate('mainUnit', 'name')
+//                 .populate('composition', 'name uniqueNumber')
+//                 .populate({
+//                     path: 'stockEntries',
+//                     select: 'quantity' // Include relevant stock fields
+//                 })
+//                 .lean(),
+//             Category.find({ company: companyId }).lean(),
+//             itemsCompany.find({ company: companyId }).lean(),
+//             Unit.find({ company: companyId }).lean(),
+//             MainUnit.find({ company: companyId }).lean(),
+//             Composition.find({ company: companyId }).lean()
+//         ]);
+
+//         // Get transaction existence in a single query
+//         const itemIds = items.map(item => item._id);
+//         const transactions = await Transaction.find({
+//             item: { $in: itemIds },
+//             company: companyId
+//         }).select('item').lean();
+
+//         const transactionItemIds = new Set(transactions.map(t => t.item.toString()));
+
+//         // Add hasTransactions flag
+//         const itemsWithFlags = items.map(item => ({
+//             ...item,
+//             hasTransactions: transactionItemIds.has(item._id.toString()) ? 'true' : 'false',
+//              currentStock: item.stockEntries && item.stockEntries.length > 0
+//                 ? item.stockEntries[0].quantity
+//                 : 0,
+//             // Or get all stock entries if needed
+//             stockEntries: item.stockEntries || []
+//         }));
+
+//         // Get current fiscal year
+//         let currentFiscalYear = req.session.currentFiscalYear;
+//         if (!currentFiscalYear && company.fiscalYear) {
+//             currentFiscalYear = await FiscalYear.findById(company.fiscalYear).lean();
+//         }
+
+//         // Nepali date calculation
+//         const today = new Date();
+//         const nepaliDate = new NepaliDate(today).format('YYYY-MM-DD');
+
+//         console.log('Session data:', {
+//             currentCompany: req.session.currentCompany,
+//             currentFiscalYear: req.session.currentFiscalYear,
+//             user: req.user
+//         });
+
+
+//         res.json({
+//             success: true,
+//             items: itemsWithFlags,
+//             company,
+//             currentFiscalYear,
+//             vatEnabled: company?.vatEnabled || false,
+//             categories,
+//             itemsCompanies,
+//             units,
+//             mainUnits,
+//             composition,
+//             companyId,
+//             currentCompanyName: req.session.currentCompanyName || '',
+//             companyDateFormat: company?.dateFormat || 'english',
+//             nepaliDate,
+//             fiscalYear: currentFiscalYear?._id || null,
+//             user: req.user,
+//             theme: req.user.preferences?.theme || 'light',
+//             isAdminOrSupervisor: req.user.isAdmin || req.user.role === 'Supervisor'
+//         });
+//     } catch (error) {
+//         console.error("Error fetching items:", error);
+//         res.status(500).json({ error: 'Failed to fetch items' });
+//     }
+// });
+
 router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, async (req, res) => {
     try {
         const companyId = req.session.currentCompany;
@@ -54,10 +150,7 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
                 .populate('unit', 'name')
                 .populate('mainUnit', 'name')
                 .populate('composition', 'name uniqueNumber')
-                .populate({
-                    path: 'stockEntries',
-                    select: 'quantity' // Include relevant stock fields
-                })
+                // Remove the populate for stockEntries since it's a subdocument array
                 .lean(),
             Category.find({ company: companyId }).lean(),
             itemsCompany.find({ company: companyId }).lean(),
@@ -75,16 +168,31 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
 
         const transactionItemIds = new Set(transactions.map(t => t.item.toString()));
 
-        // Add hasTransactions flag
-        const itemsWithFlags = items.map(item => ({
-            ...item,
-            hasTransactions: transactionItemIds.has(item._id.toString()) ? 'true' : 'false',
-             currentStock: item.stockEntries && item.stockEntries.length > 0
-                ? item.stockEntries[0].quantity
-                : 0,
-            // Or get all stock entries if needed
-            stockEntries: item.stockEntries || []
-        }));
+        // Add hasTransactions flag and calculate current stock from stockEntries
+        const itemsWithFlags = items.map(item => {
+            // Calculate current stock from stockEntries subdocuments
+            let currentStock = 0;
+
+            if (item.stockEntries && item.stockEntries.length > 0) {
+                // Sum all quantities from stockEntries subdocuments
+                currentStock = item.stockEntries.reduce((total, entry) => {
+                    // Since stockEntries is a subdocument array, we can directly access quantity
+                    const quantity = parseFloat(entry.quantity) || 0;
+                    return total + quantity;
+                }, 0);
+            } else {
+                // Fallback to the item's openingStock field if no stockEntries
+                currentStock = parseFloat(item.openingStock) || 0;
+            }
+
+            return {
+                ...item,
+                hasTransactions: transactionItemIds.has(item._id.toString()) ? 'true' : 'false',
+                currentStock: currentStock,
+                // Include stockEntries count for debugging
+                stockEntriesCount: item.stockEntries ? item.stockEntries.length : 0
+            };
+        });
 
         // Get current fiscal year
         let currentFiscalYear = req.session.currentFiscalYear;
@@ -102,6 +210,14 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
             user: req.user
         });
 
+        // Debug: Log first few items with stock data
+        console.log('Stock calculation debug - First 3 items:', itemsWithFlags.slice(0, 3).map(item => ({
+            name: item.name,
+            currentStock: item.currentStock,
+            stockEntriesCount: item.stockEntriesCount,
+            openingStock: item.openingStock,
+            stockEntries: item.stockEntries ? item.stockEntries.map(se => ({ quantity: se.quantity })) : 'none'
+        })));
 
         res.json({
             success: true,
@@ -139,10 +255,10 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
 // router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ensureTradeType, ensureFiscalYear, async (req, res) => {
 //     try {
 //         const companyId = req.session.currentCompany;
-        
+
 //         // Create a unique cache key based on request parameters
 //         const cacheKey = `items_${companyId}_${req.session.currentFiscalYear || 'noFY'}`;
-        
+
 //         // Check if data exists in cache
 //         const cachedData = myCache.get(cacheKey);
 //         if (cachedData) {
@@ -232,7 +348,7 @@ router.get('/items', isLoggedIn, ensureAuthenticated, ensureCompanySelected, ens
 
 //         // Store data in cache
 //         myCache.set(cacheKey, responseData);
-        
+
 //         console.log('Data cached with key:', cacheKey);
 //         res.json(responseData);
 //     } catch (error) {

@@ -31,7 +31,7 @@ const PurchaseBillsList = () => {
             currentFiscalYear: null,
             bills: [],
             fromDate: '',
-            toDate: company.dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate
+            toDate: ''
         };
     });
 
@@ -57,6 +57,44 @@ const PurchaseBillsList = () => {
     });
 
     // Fetch company and fiscal year info when component mounts
+    // useEffect(() => {
+    //     const fetchInitialData = async () => {
+    //         try {
+    //             const response = await api.get('/api/my-company');
+    //             if (response.data.success) {
+    //                 const { company: companyData, currentFiscalYear } = response.data;
+
+    //                 // Set company info
+    //                 const dateFormat = companyData.dateFormat || 'english';
+    //                 setCompany({
+    //                     dateFormat,
+    //                     isVatExempt: companyData.isVatExempt || false,
+    //                     vatEnabled: companyData.vatEnabled !== false, // default true
+    //                     fiscalYear: currentFiscalYear || {}
+    //                 });
+
+    //                 // Set dates based on fiscal year
+    //                 if (currentFiscalYear?.startDate) {
+    //                     setData(prev => ({
+    //                         ...prev,
+    //                         fromDate: dateFormat === 'nepali'
+    //                             ? new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD')
+    //                             : new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD'),
+    //                         toDate: dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate,
+    //                         company: companyData,
+    //                         currentFiscalYear
+    //                     }));
+    //                 }
+    //             }
+    //         } catch (err) {
+    //             console.error('Error fetching initial data:', err);
+    //         }
+    //     };
+
+    //     fetchInitialData();
+    // }, []);
+
+    // Fetch company and fiscal year info when component mounts
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
@@ -73,14 +111,24 @@ const PurchaseBillsList = () => {
                         fiscalYear: currentFiscalYear || {}
                     });
 
-                    // Set dates based on fiscal year
-                    if (currentFiscalYear?.startDate) {
+                    // Check if we have draft dates
+                    const hasDraftDates = draftSave?.purchaseBillsData?.fromDate && draftSave?.purchaseBillsData?.toDate;
+
+                    if (!hasDraftDates && currentFiscalYear?.startDate) {
+                        // Only set default dates if we don't have draft dates
                         setData(prev => ({
                             ...prev,
                             fromDate: dateFormat === 'nepali'
                                 ? new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD')
                                 : new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD'),
                             toDate: dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate,
+                            company: companyData,
+                            currentFiscalYear
+                        }));
+                    } else {
+                        // If we have draft data, ensure company info is updated
+                        setData(prev => ({
+                            ...prev,
                             company: companyData,
                             currentFiscalYear
                         }));
@@ -128,10 +176,41 @@ const PurchaseBillsList = () => {
             purchaseBillsSearch: {
                 searchQuery,
                 paymentModeFilter,
-                selectedRowIndex
+                selectedRowIndex,
+                fromDate: data.fromDate,
+                toDate: data.toDate
             }
         });
-    }, [data, searchQuery, paymentModeFilter, selectedRowIndex]);
+    }, [data, searchQuery, paymentModeFilter, selectedRowIndex, data.fromDate, data.toDate]);
+
+    // Fetch data when generate report is clicked
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         if (!shouldFetch) return;
+
+    //         try {
+    //             setLoading(true);
+    //             const params = new URLSearchParams();
+    //             if (data.fromDate) params.append('fromDate', data.fromDate);
+    //             if (data.toDate) params.append('toDate', data.toDate);
+
+    //             const response = await api.get(`/api/retailer/purchase-register?${params.toString()}`);
+    //             setData(response.data.data);
+    //             setError(null);
+    //             // Don't reset selection when new data loads if we have a saved position
+    //             if (!draftSave?.purchaseBillsSearch?.selectedRowIndex) {
+    //                 setSelectedRowIndex(0);
+    //             }
+    //         } catch (err) {
+    //             setError(err.response?.data?.error || 'Failed to fetch purchase bills');
+    //         } finally {
+    //             setLoading(false);
+    //             setShouldFetch(false);
+    //         }
+    //     };
+
+    //     fetchData();
+    // }, [shouldFetch, data.fromDate, data.toDate]);
 
     // Fetch data when generate report is clicked
     useEffect(() => {
@@ -163,6 +242,29 @@ const PurchaseBillsList = () => {
     }, [shouldFetch, data.fromDate, data.toDate]);
 
     // Filter bills based on search and payment mode
+    // useEffect(() => {
+    //     const filtered = data.bills.filter(bill => {
+    //         const matchesSearch =
+    //             bill.billNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    //             bill.partyBillNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    //             bill.account?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    //             bill.user?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    //         const matchesPaymentMode =
+    //             paymentModeFilter === '' ||
+    //             bill.paymentMode?.toLowerCase() === paymentModeFilter.toLowerCase();
+
+    //         return matchesSearch && matchesPaymentMode;
+    //     });
+
+    //     setFilteredBills(filtered);
+    //     // Reset selected row when filters change, but only if we don't have a saved position
+    //     if (!draftSave?.purchaseBillsSearch?.selectedRowIndex) {
+    //         setSelectedRowIndex(0);
+    //     }
+    // }, [data.bills, searchQuery, paymentModeFilter]);
+
+    // Filter bills based on search and payment mode
     useEffect(() => {
         const filtered = data.bills.filter(bill => {
             const matchesSearch =
@@ -179,11 +281,13 @@ const PurchaseBillsList = () => {
         });
 
         setFilteredBills(filtered);
+
         // Reset selected row when filters change, but only if we don't have a saved position
         if (!draftSave?.purchaseBillsSearch?.selectedRowIndex) {
             setSelectedRowIndex(0);
         }
     }, [data.bills, searchQuery, paymentModeFilter]);
+
 
     // Calculate totals when filtered bills change
     useEffect(() => {
@@ -239,11 +343,6 @@ const PurchaseBillsList = () => {
                 case 'ArrowDown':
                     e.preventDefault();
                     setSelectedRowIndex(prev => Math.min(filteredBills.length - 1, prev + 1));
-                    break;
-                case 'Enter':
-                    if (selectedRowIndex >= 0 && selectedRowIndex < filteredBills.length) {
-                        navigate(`/retailer/purchase/${filteredBills[selectedRowIndex]._id}/print`);
-                    }
                     break;
                 default:
                     break;
@@ -486,7 +585,7 @@ const PurchaseBillsList = () => {
     };
 
     const handleRowDoubleClick = (billId) => {
-        navigate(`/api/retailer/purchase/${billId}/print`);
+        navigate(`/retailer/purchase/${filteredBills[selectedRowIndex]._id}/print`);
     };
 
     const handleKeyDown = (e, nextFieldId) => {

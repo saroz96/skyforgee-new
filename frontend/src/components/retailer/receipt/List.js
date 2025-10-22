@@ -26,7 +26,7 @@ const ReceiptsList = () => {
             currentFiscalYear: null,
             receipts: [],
             fromDate: '',
-            toDate: company.dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate,
+            toDate: '',
             userPreferences: {
                 theme: 'light'
             },
@@ -58,6 +58,44 @@ const ReceiptsList = () => {
     });
 
     // Fetch company and fiscal year info when component mounts
+    // useEffect(() => {
+    //     const fetchInitialData = async () => {
+    //         try {
+    //             const response = await api.get('/api/my-company');
+    //             if (response.data.success) {
+    //                 const { company: companyData, currentFiscalYear } = response.data;
+
+    //                 // Set company info
+    //                 const dateFormat = companyData.dateFormat || 'english';
+    //                 setCompany({
+    //                     dateFormat,
+    //                     isVatExempt: companyData.isVatExempt || false,
+    //                     vatEnabled: companyData.vatEnabled !== false, // default true
+    //                     fiscalYear: currentFiscalYear || {}
+    //                 });
+
+    //                 // Set dates based on fiscal year
+    //                 if (currentFiscalYear?.startDate) {
+    //                     setData(prev => ({
+    //                         ...prev,
+    //                         fromDate: dateFormat === 'nepali'
+    //                             ? new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD')
+    //                             : new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD'),
+    //                         toDate: dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate,
+    //                         company: companyData,
+    //                         currentFiscalYear
+    //                     }));
+    //                 }
+    //             }
+    //         } catch (err) {
+    //             console.error('Error fetching initial data:', err);
+    //         }
+    //     };
+
+    //     fetchInitialData();
+    // }, []);
+
+    // Fetch company and fiscal year info when component mounts
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
@@ -74,14 +112,24 @@ const ReceiptsList = () => {
                         fiscalYear: currentFiscalYear || {}
                     });
 
-                    // Set dates based on fiscal year
-                    if (currentFiscalYear?.startDate) {
+                    // Check if we have draft dates
+                    const hasDraftDates = draftSave?.receiptsData?.fromDate && draftSave?.receiptsData?.toDate;
+
+                    if (!hasDraftDates && currentFiscalYear?.startDate) {
+                        // Only set default dates if we don't have draft dates
                         setData(prev => ({
                             ...prev,
                             fromDate: dateFormat === 'nepali'
                                 ? new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD')
                                 : new NepaliDate(currentFiscalYear.startDate).format('YYYY-MM-DD'),
                             toDate: dateFormat === 'nepali' ? currentNepaliDate : currentEnglishDate,
+                            company: companyData,
+                            currentFiscalYear
+                        }));
+                    } else {
+                        // If we have draft data, ensure company info is updated
+                        setData(prev => ({
+                            ...prev,
                             company: companyData,
                             currentFiscalYear
                         }));
@@ -122,10 +170,41 @@ const ReceiptsList = () => {
             receiptsSearch: {
                 searchQuery,
                 receiptAccountFilter,
-                selectedRowIndex
+                selectedRowIndex,
+                fromDate: data.fromDate,
+                toDate: data.toDate
             }
         });
-    }, [data, searchQuery, receiptAccountFilter, selectedRowIndex]);
+    }, [data, searchQuery, receiptAccountFilter, selectedRowIndex, data.fromDate, data.toDate]);
+
+    // Fetch data when generate report is clicked
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         if (!shouldFetch) return;
+
+    //         try {
+    //             setLoading(true);
+    //             const params = new URLSearchParams();
+    //             if (data.fromDate) params.append('fromDate', data.fromDate);
+    //             if (data.toDate) params.append('toDate', data.toDate);
+
+    //             const response = await api.get(`/api/retailer/receipts/register?${params.toString()}`);
+    //             setData(response.data.data);
+    //             setError(null);
+    //             // Don't reset selection when new data loads if we have a saved position
+    //             if (!draftSave?.receiptsSearch?.selectedRowIndex) {
+    //                 setSelectedRowIndex(0);
+    //             }
+    //         } catch (err) {
+    //             setError(err.response?.data?.error || 'Failed to fetch receipts');
+    //         } finally {
+    //             setLoading(false);
+    //             setShouldFetch(false);
+    //         }
+    //     };
+
+    //     fetchData();
+    // }, [shouldFetch, data.fromDate, data.toDate]);
 
     // Fetch data when generate report is clicked
     useEffect(() => {
@@ -157,6 +236,28 @@ const ReceiptsList = () => {
     }, [shouldFetch, data.fromDate, data.toDate]);
 
     // Filter receipts based on search and receipt account
+    // useEffect(() => {
+    //     const filtered = data.receipts.filter(receipt => {
+    //         const matchesSearch =
+    //             receipt.billNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    //             receipt.account?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    //             receipt.user?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    //         const matchesReceiptAccount =
+    //             receiptAccountFilter === '' ||
+    //             (receipt.receiptAccount?.name?.toLowerCase() === receiptAccountFilter.toLowerCase());
+
+    //         return matchesSearch && matchesReceiptAccount;
+    //     });
+
+    //     setFilteredReceipts(filtered);
+    //     // Reset selected row when filters change, but only if we don't have a saved position
+    //     if (!draftSave?.receiptsSearch?.selectedRowIndex) {
+    //         setSelectedRowIndex(0);
+    //     }
+    // }, [data.receipts, searchQuery, receiptAccountFilter]);
+
+    // Filter receipts based on search and receipt account
     useEffect(() => {
         const filtered = data.receipts.filter(receipt => {
             const matchesSearch =
@@ -172,6 +273,7 @@ const ReceiptsList = () => {
         });
 
         setFilteredReceipts(filtered);
+
         // Reset selected row when filters change, but only if we don't have a saved position
         if (!draftSave?.receiptsSearch?.selectedRowIndex) {
             setSelectedRowIndex(0);
@@ -211,11 +313,6 @@ const ReceiptsList = () => {
                 case 'ArrowDown':
                     e.preventDefault();
                     setSelectedRowIndex(prev => Math.min(filteredReceipts.length - 1, prev + 1));
-                    break;
-                case 'Enter':
-                    if (selectedRowIndex >= 0 && selectedRowIndex < filteredReceipts.length) {
-                        navigate(`/retailer/receipts/${filteredReceipts[selectedRowIndex]._id}/print`);
-                    }
                     break;
                 default:
                     break;
@@ -416,7 +513,7 @@ const ReceiptsList = () => {
     };
 
     const handleRowDoubleClick = (receiptId) => {
-        navigate(`/receipts/${receiptId}/print`);
+        navigate(`/retailer/receipts/${filteredReceipts[selectedRowIndex]._id}/print`);
     };
 
     const handleKeyDown = (e, nextFieldId) => {
