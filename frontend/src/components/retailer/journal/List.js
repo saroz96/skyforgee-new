@@ -18,6 +18,12 @@ const JournalList = () => {
         isAdminOrSupervisor: false
     });
 
+    const [company, setCompany] = useState({
+        dateFormat: 'nepali',
+        vatEnabled: true,
+        fiscalYear: {}
+    });
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -344,12 +350,23 @@ const JournalList = () => {
         printWindow.document.close();
     };
 
+
     const formatCurrency = (num) => {
-        return (num || 0).toLocaleString('en-US', {
+        const number = typeof num === 'string' ? parseFloat(num.replace(/,/g, '')) : Number(num) || 0;
+        if (company.dateFormat === 'nepali') {
+            // Indian grouping, two decimals, English digits
+            return number.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+        // English (US) grouping by default
+        return number.toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
     };
+
 
     const handleRowClick = (index) => {
         setSelectedRowIndex(index);

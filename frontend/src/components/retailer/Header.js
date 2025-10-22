@@ -824,6 +824,12 @@ const Header = () => {
                     </li>
                   )}
                 {(user?.role === 'ADMINISTRATOR' || user?.role === 'Supervisor' ||
+                  user?.isAdmin || user?.menuPermissions?.get('existingFiscalYear')) && (
+                    <li className="menu-item">
+                      <Link to="/backups">Backups</Link>
+                    </li>
+                  )}
+                {(user?.role === 'ADMINISTRATOR' || user?.role === 'Supervisor' ||
                   user?.isAdmin || user?.menuPermissions?.get('importExportSubHeader')) && (
                     <li className="menu-item dropdown">
                       <Link to="#">Import</Link>

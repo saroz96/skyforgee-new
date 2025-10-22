@@ -107,6 +107,7 @@ import ExistingFiscalYears from './components/fiscalYear/ExistingFiscalYears';
 import ChangeNewFiscalYear from './components/fiscalYear/ChangeNewFiscalYear';
 import SplitCompany from './components/company/SplitCompany';
 import DayWiseAgeing from './components/retailer/ageingReport/DayWiseAgeing';
+import BackupPages from './components/backups/BackupPages';
 
 function AppContent() {
   const { currentUser } = useAuth();
@@ -871,6 +872,14 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <ChangeNewFiscalYear />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/backups"
+              element={
+                <ProtectedRoute>
+                  <BackupPages />
                 </ProtectedRoute>
               }
             />

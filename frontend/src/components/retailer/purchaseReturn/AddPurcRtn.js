@@ -11,6 +11,8 @@ import { calculateExpiryStatus } from '../dashboard/modals/ExpiryStatus';
 import '../../../stylesheet/noDateIcon.css'
 import ProductModal from '../dashboard/modals/ProductModal';
 import AccountBalanceDisplay from '../payment/AccountBalanceDisplay';
+import useDebounce from '../../../hooks/useDebounce';
+import VirtualizedItemList from '../../VirtualizedItemList';
 
 const AddPurcRtn = () => {
     const navigate = useNavigate();
@@ -35,6 +37,13 @@ const AddPurcRtn = () => {
         batchStockMap: new Map(), // Maps batch unique ID to available stock
         usedStockMap: new Map(), // Maps batch unique ID to used quantity across all entries
     });
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [lastSearchQuery, setLastSearchQuery] = useState('');
+    const [shouldShowLastSearchResults, setShouldShowLastSearchResults] = useState(false);
+    const debouncedSearchQuery = useDebounce(searchQuery, 50);
+
+
     // Add these state variables for transaction functionality
     const [transactionSettings, setTransactionSettings] = useState({
         displayTransactions: false,
@@ -203,19 +212,19 @@ const AddPurcRtn = () => {
         calculateTotal();
     }, [items, formData]);
 
-    useEffect(() => {
-        if (itemSearchRef.current?.value) {
-            handleItemSearch({ target: { value: itemSearchRef.current.value } });
-        } else {
-            const filtered = allItems.filter(item => {
-                if (formData.isVatExempt === 'all') return true;
-                if (formData.isVatExempt === 'false') return item.vatStatus === 'vatable';
-                if (formData.isVatExempt === 'true') return item.vatStatus === 'vatExempt';
-                return true;
-            });
-            setFilteredItems(filtered);
-        }
-    }, [formData.isVatExempt, allItems]);
+    // useEffect(() => {
+    //     if (itemSearchRef.current?.value) {
+    //         handleItemSearch({ target: { value: itemSearchRef.current.value } });
+    //     } else {
+    //         const filtered = allItems.filter(item => {
+    //             if (formData.isVatExempt === 'all') return true;
+    //             if (formData.isVatExempt === 'false') return item.vatStatus === 'vatable';
+    //             if (formData.isVatExempt === 'true') return item.vatStatus === 'vatExempt';
+    //             return true;
+    //         });
+    //         setFilteredItems(filtered);
+    //     }
+    // }, [formData.isVatExempt, allItems]);
 
     useEffect(() => {
         // Add F9 key handler here
@@ -228,6 +237,14 @@ const AddPurcRtn = () => {
         window.addEventListener('keydown', handF9leKeyDown);
         return () => {
             window.removeEventListener('keydown', handF9leKeyDown);
+        };
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            // Reset search memory when component unmounts
+            setLastSearchQuery('');
+            setShouldShowLastSearchResults(false);
         };
     }, []);
 
@@ -337,29 +354,53 @@ const AddPurcRtn = () => {
         setShowAccountModal(false);
     };
 
+    // const handleItemSearch = (e) => {
+    //     const query = e.target.value.toLowerCase();
+
+    //     if (query.length === 0) {
+    //         setFilteredItems([]);
+    //         return;
+    //     }
+
+    //     let filtered = allItems.filter(item => {
+    //         const matchesSearch = item.name.toLowerCase().includes(query) ||
+    //             (item.hscode && item.hscode.toString().toLowerCase().includes(query)) ||
+    //             (item.uniqueNumber && item.uniqueNumber.toString().toLowerCase().includes(query)) ||
+    //             (item.category && item.category.name.toLowerCase().includes(query));
+
+    //         if (formData.isVatExempt === 'all') return matchesSearch;
+    //         if (formData.isVatExempt === 'false') return matchesSearch && item.vatStatus === 'vatable';
+    //         if (formData.isVatExempt === 'true') return matchesSearch && item.vatStatus === 'vatExempt';
+    //         return matchesSearch;
+    //     }).sort((a, b) => a.name.localeCompare(b.name));
+
+    //     setFilteredItems(filtered);
+    // };
+
     const handleItemSearch = (e) => {
         const query = e.target.value.toLowerCase();
+        setSearchQuery(query);
 
-        if (query.length === 0) {
-            setFilteredItems([]);
-            return;
+        // When user starts typing, disable showing last search results
+        if (query.length > 0) {
+            setShouldShowLastSearchResults(false);
         }
 
-        let filtered = allItems.filter(item => {
-            const matchesSearch = item.name.toLowerCase().includes(query) ||
-                (item.hscode && item.hscode.toString().toLowerCase().includes(query)) ||
-                (item.uniqueNumber && item.uniqueNumber.toString().toLowerCase().includes(query)) ||
-                (item.category && item.category.name.toLowerCase().includes(query));
-
-            if (formData.isVatExempt === 'all') return matchesSearch;
-            if (formData.isVatExempt === 'false') return matchesSearch && item.vatStatus === 'vatable';
-            if (formData.isVatExempt === 'true') return matchesSearch && item.vatStatus === 'vatExempt';
-            return matchesSearch;
-        }).sort((a, b) => a.name.localeCompare(b.name));
-
-        setFilteredItems(filtered);
+        setShowItemDropdown(true);
     };
 
+    const handleSearchFocus = () => {
+        setShowItemDropdown(true);
+
+        // If we have a last search query and the input is empty, show those results
+        if (lastSearchQuery && !searchQuery) {
+            setShouldShowLastSearchResults(true);
+        }
+
+        document.querySelectorAll('.dropdown-item').forEach(item => {
+            item.classList.remove('active');
+        });
+    };
     const showBatchModalForItem = (item) => {
         setSelectedItemForBatch(item);
         setShowBatchModal(true);
@@ -429,6 +470,13 @@ const AddPurcRtn = () => {
     // };
 
     const addItemToBill = async (item, batchInfo) => {
+
+        // Store the search query when adding an item
+        if (itemSearchRef.current?.value) {
+            setLastSearchQuery(itemSearchRef.current.value);
+            setShouldShowLastSearchResults(true);
+        }
+
         const batchKey = `${item._id}-${batchInfo.batchNumber}-${batchInfo.uniqueUuId}`;
         const availableStock = stockValidation.batchStockMap.get(batchKey) || 0;
 
@@ -466,6 +514,12 @@ const AddPurcRtn = () => {
         setShowItemDropdown(false);
         itemSearchRef.current.value = '';
         setSelectedItemIndex(updatedItems.length - 1);
+
+        // Clear search after adding item
+        setSearchQuery('');
+        if (itemSearchRef.current) {
+            itemSearchRef.current.value = '';
+        }
 
         // Show available stock info
         setNotification({
@@ -526,6 +580,48 @@ const AddPurcRtn = () => {
             }
         }, 100);
     };
+
+    // Memoized filtered items calculation
+    const memoizedFilteredItems = React.useMemo(() => {
+        // If we should show last search results and there's a last search query
+        if (shouldShowLastSearchResults && lastSearchQuery && !searchQuery) {
+            return allItems.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(lastSearchQuery.toLowerCase()) ||
+                    (item.hscode && item.hscode.toString().toLowerCase().includes(lastSearchQuery.toLowerCase())) ||
+                    (item.uniqueNumber && item.uniqueNumber.toString().toLowerCase().includes(lastSearchQuery.toLowerCase())) ||
+                    (item.category && item.category.name.toLowerCase().includes(lastSearchQuery.toLowerCase()));
+
+                if (formData.isVatExempt === 'all') return matchesSearch;
+                if (formData.isVatExempt === 'false') return matchesSearch && item.vatStatus === 'vatable';
+                if (formData.isVatExempt === 'true') return matchesSearch && item.vatStatus === 'vatExempt';
+                return matchesSearch;
+            });
+        }
+
+        // Normal search behavior
+        if (!searchQuery && allItems.length > 0) {
+            return allItems.filter(item => {
+                if (formData.isVatExempt === 'all') return true;
+                if (formData.isVatExempt === 'false') return item.vatStatus === 'vatable';
+                if (formData.isVatExempt === 'true') return item.vatStatus === 'vatExempt';
+                return true;
+            });
+        }
+
+        if (searchQuery.length === 0) return [];
+
+        return allItems.filter(item => {
+            const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (item.hscode && item.hscode.toString().toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (item.uniqueNumber && item.uniqueNumber.toString().toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (item.category && item.category.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+            if (formData.isVatExempt === 'all') return matchesSearch;
+            if (formData.isVatExempt === 'false') return matchesSearch && item.vatStatus === 'vatable';
+            if (formData.isVatExempt === 'true') return matchesSearch && item.vatStatus === 'vatExempt';
+            return matchesSearch;
+        });
+    }, [allItems, formData.isVatExempt, searchQuery, lastSearchQuery, shouldShowLastSearchResults]);
 
     // const updateItemField = (index, field, value) => {
     //     const updatedItems = [...items];
@@ -1043,6 +1139,75 @@ const AddPurcRtn = () => {
         }
     };
 
+    // Memoized dropdown component
+    const ItemDropdown = React.useMemo(() => {
+        if (!showItemDropdown) return null;
+
+        const itemsToShow = memoizedFilteredItems;
+
+        // Determine what message to show
+        let message = null;
+        if (itemsToShow.length === 0) {
+            if (shouldShowLastSearchResults && lastSearchQuery) {
+                message = `No items found matching "${lastSearchQuery}"`;
+            } else if (searchQuery) {
+                message = `No items found matching "${searchQuery}"`;
+            } else {
+                message = "No items available";
+            }
+        }
+
+        return (
+            <div
+                id="dropdownMenu"
+                className="dropdown-menu show"
+                style={{
+                    maxHeight: '280px',
+                    height: '280px',
+                    overflow: 'hidden',
+                    position: 'absolute',
+                    width: '100%',
+                    zIndex: 1000,
+                    border: '1px solid #ddd',
+                    borderRadius: '4px'
+                }}
+                ref={itemDropdownRef}
+            >
+                <div className="dropdown-header" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
+                    alignItems: 'center',
+                    padding: '0 10px',
+                    height: '40px',
+                    background: '#f0f0f0',
+                    fontWeight: 'bold',
+                    borderBottom: '1px solid #dee2e6'
+                }}>
+                    <div><strong>#</strong></div>
+                    <div><strong>HSN</strong></div>
+                    <div><strong>Description</strong></div>
+                    <div><strong>Category</strong></div>
+                    <div><strong>Qty</strong></div>
+                    <div><strong>Unit</strong></div>
+                    <div><strong>Rate</strong></div>
+                </div>
+
+                {itemsToShow.length > 0 ? (
+                    <VirtualizedItemList
+                        items={itemsToShow}
+                        onItemClick={(item) => showBatchModalForItem(item)}
+                        searchRef={itemSearchRef}
+                    />
+                ) : (
+                    <div className="text-center py-3 text-muted">
+                        {message}
+                    </div>
+                )}
+            </div>
+        );
+    }, [showItemDropdown, memoizedFilteredItems, searchQuery, lastSearchQuery, shouldShowLastSearchResults]);
+
+
     const handleBatchRowClick = (batchInfo) => {
         if (!selectedItemForBatch) return;
 
@@ -1555,7 +1720,7 @@ const AddPurcRtn = () => {
 
                         <hr style={{ border: "1px solid gray" }} />
 
-                        <div className="form-group row">
+                        {/* <div className="form-group row">
                             <div className="col">
                                 <label htmlFor="itemSearch">Search Item</label>
                                 <input
@@ -1769,8 +1934,50 @@ const AddPurcRtn = () => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> */}
 
+                        <div className="form-group row">
+                            <div className="col">
+                                <label htmlFor="itemSearch">Search Item</label>
+                                <input
+                                    type="text"
+                                    id="itemSearch"
+                                    className="form-control"
+                                    placeholder="Search for an item"
+                                    autoComplete='off'
+                                    value={searchQuery}
+                                    onChange={handleItemSearch}
+                                    onFocus={handleSearchFocus}
+                                    ref={itemSearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'ArrowDown') {
+                                            e.preventDefault();
+                                            const firstItem = document.querySelector('.dropdown-item');
+                                            if (firstItem) {
+                                                firstItem.classList.add('active');
+                                                firstItem.focus();
+                                            }
+                                        } else if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            const activeItem = document.querySelector('.dropdown-item.active');
+                                            if (activeItem) {
+                                                const index = parseInt(activeItem.getAttribute('data-index'));
+                                                const itemToAdd = memoizedFilteredItems[index];
+                                                if (itemToAdd) {
+                                                    showBatchModalForItem(itemToAdd);
+                                                }
+                                            } else if (!searchQuery && items.length > 0) {
+                                                setShowItemDropdown(false);
+                                                setTimeout(() => {
+                                                    document.getElementById('discountPercentage')?.focus();
+                                                }, 0);
+                                            }
+                                        }
+                                    }}
+                                />
+                                {ItemDropdown}
+                            </div>
+                        </div>
                         <div className="table-responsive">
                             <table className="table table-bordered">
                                 <thead>
