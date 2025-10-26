@@ -5,6 +5,8 @@ import axios from 'axios';
 import NepaliDate from 'nepali-date-converter';
 import NotificationToast from '../../NotificationToast';
 import Header from '../Header';
+import { Button } from 'react-bootstrap';
+import { BiArrowBack } from 'react-icons/bi';
 
 const EditReceipt = () => {
     const { id } = useParams();
@@ -121,6 +123,10 @@ const EditReceipt = () => {
 
         setShowBankDetails(isBankAccount);
         setFormData(prev => ({ ...prev, receiptAccount: selectedValue }));
+    };
+
+    const handleBack = () => {
+        navigate(-1);
     };
 
     const handleSubmit = async (print = false) => {
@@ -326,28 +332,28 @@ const EditReceipt = () => {
                         <tr>
                             <td>1</td>
                             <td>
-                                ${printData.receipt.isActive ? 
-                                    (printData.receipt.account?.name || 'N/A') : 
-                                    '<span class="text-danger">Canceled</span>'}
+                                ${printData.receipt.isActive ?
+                (printData.receipt.account?.name || 'N/A') :
+                '<span class="text-danger">Canceled</span>'}
                             </td>
                             <td>0.00</td>
                             <td>
-                                ${printData.receipt.isActive ? 
-                                    printData.receipt.credit?.toFixed(2) : 
-                                    '<span class="text-danger">0.00</span>'}
+                                ${printData.receipt.isActive ?
+                printData.receipt.credit?.toFixed(2) :
+                '<span class="text-danger">0.00</span>'}
                             </td>
                         </tr>
                         <tr>
                             <td>2</td>
                             <td>
-                                ${printData.receipt.isActive ? 
-                                    (printData.receipt.receiptAccount?.name || 'N/A') : 
-                                    '<span class="text-danger">Canceled</span>'}
+                                ${printData.receipt.isActive ?
+                (printData.receipt.receiptAccount?.name || 'N/A') :
+                '<span class="text-danger">Canceled</span>'}
                             </td>
                             <td>
-                                ${printData.receipt.isActive ? 
-                                    printData.receipt.credit?.toFixed(2) : 
-                                    '<span class="text-danger">0.00</span>'}
+                                ${printData.receipt.isActive ?
+                printData.receipt.credit?.toFixed(2) :
+                '<span class="text-danger">0.00</span>'}
                             </td>
                             <td>0.00</td>
                         </tr>
@@ -860,6 +866,9 @@ const EditReceipt = () => {
                                     />
                                 </div>
                                 <div style={{ float: 'right' }}>
+                                    <Button variant="secondary" className="me-2" onClick={handleBack}>
+                                        <BiArrowBack /> Back
+                                    </Button>
                                     <button
                                         type="submit"
                                         className="btn btn-primary"

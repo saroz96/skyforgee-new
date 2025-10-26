@@ -6413,11 +6413,19 @@ function prepareStatementWithOpeningBalanceAndTotals(openingBalance, transaction
             purchaseSalesReturnType: '',
             journalAccountType: '',
             drCrNoteAccountType: '',
+            InstType: '',
+            InstNo: '',
             account: '',
             debit: 0,
             credit: 0,
             balance: openingBalance,
-            billId: ''
+            billId: '',
+            purchaseBillId: '',
+            purchaseReturnBillId: '',
+            paymentAccountId: '',
+            receiptAccountId: '',
+            journalBillId: '',
+            debitNoteId: ''
         }
     ] : [];
 
@@ -6440,11 +6448,19 @@ function prepareStatementWithOpeningBalanceAndTotals(openingBalance, transaction
                 purchaseSalesReturnType: tx.purchaseSalesReturnType,
                 journalAccountType: tx.journalAccountType,
                 drCrNoteAccountType: tx.drCrNoteAccountType,
+                InstType: tx.InstType,
+                InstNo: tx.InstNo,
                 account: tx.account,
                 debit: 0,
                 credit: 0,
                 balance: 0,
-                billId: tx.billId
+                billId: tx.billId,
+                purchaseBillId: tx.purchaseBillId,
+                purchaseReturnBillId: tx.purchaseReturnBillId,
+                paymentAccountId: tx.paymentAccountId,
+                receiptAccountId: tx.receiptAccountId,
+                journalBillId: tx.journalBillId,
+                debitNoteId: tx.debitNoteId
             };
         }
         acc[billId].debit = tx.debit || 0;
@@ -6473,11 +6489,19 @@ function prepareStatementWithOpeningBalanceAndTotals(openingBalance, transaction
             purchaseSalesReturnType: tx.purchaseSalesReturnType,
             journalAccountType: tx.journalAccountType,
             drCrNoteAccountType: tx.drCrNoteAccountType,
+            InstType: tx.InstType,
+            InstNo: tx.InstNo,
             account: tx.account,
             debit: tx.debit,
             credit: tx.credit,
             balance: balance,
             billId: tx.billId,
+            purchaseBillId: tx.purchaseBillId,
+            purchaseReturnBillId: tx.purchaseReturnBillId,
+            paymentAccountId: tx.paymentAccountId,
+            receiptAccountId: tx.receiptAccountId,
+            journalBillId: tx.journalBillId,
+            debitNoteId: tx.debitNoteId
         });
     });
 

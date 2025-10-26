@@ -6,6 +6,8 @@ import NotificationToast from '../../NotificationToast';
 import Header from '../Header';
 import Loader from '../../Loader';
 import AccountBalanceDisplay from '../payment/AccountBalanceDisplay';
+import { Button } from 'react-bootstrap';
+import { BiArrowBack } from 'react-icons/bi';
 
 const EditJournalVoucher = () => {
     const { id } = useParams();
@@ -109,28 +111,9 @@ const EditJournalVoucher = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // const handleRowChange = (index, field, value) => {
-    //     setFormData(prev => {
-    //         const newEntries = [...prev.entries];
-    //         newEntries[index] = { ...newEntries[index], [field]: value };
-
-    //         // If this is the last row and user is entering data in the last amount field, add a new row
-    //         if (index === newEntries.length - 1 && value !== '' &&
-    //             (field === 'debitAmount' || field === 'creditAmount')) {
-    //             newEntries.push({
-    //                 id: Date.now() + Math.random(),
-    //                 debitAccountId: '',
-    //                 debitAccountName: '',
-    //                 debitAmount: '',
-    //                 creditAccountId: '',
-    //                 creditAccountName: '',
-    //                 creditAmount: ''
-    //             });
-    //         }
-
-    //         return { ...prev, entries: newEntries };
-    //     });
-    // };
+    const handleBack = () => {
+        navigate(-1);
+    };
 
     const handleRowChange = (index, field, value) => {
         setFormData(prev => {
@@ -1072,6 +1055,9 @@ const EditJournalVoucher = () => {
                                     <i className="fas fa-info-circle me-1"></i>
                                 </div>
                                 <div>
+                                    <Button variant="secondary" className="me-2" onClick={handleBack}>
+                                        <BiArrowBack /> Back
+                                    </Button>
                                     <button
                                         type="submit"
                                         id='saveBill'
@@ -1086,7 +1072,7 @@ const EditJournalVoucher = () => {
                                         ) : (
                                             <>
                                                 <i className="fas fa-save me-2"></i>
-                                                Update Voucher
+                                                Update
                                             </>
                                         )}
                                     </button>

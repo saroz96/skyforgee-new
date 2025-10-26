@@ -5,6 +5,8 @@ import axios from 'axios';
 import NepaliDate from 'nepali-date-converter';
 import NotificationToast from '../../NotificationToast';
 import Header from '../Header';
+import { Button } from 'react-bootstrap';
+import { BiArrowBack } from 'react-icons/bi';
 
 const EditPayment = () => {
     const { id } = useParams();
@@ -119,6 +121,10 @@ const EditPayment = () => {
 
         setShowBankDetails(isBankAccount);
         setFormData(prev => ({ ...prev, paymentAccount: selectedValue }));
+    };
+
+    const handleBack = () => {
+        navigate(-1);
     };
 
     const handleSubmit = async (print = false) => {
@@ -801,6 +807,9 @@ const EditPayment = () => {
                                     />
                                 </div>
                                 <div style={{ float: 'right' }}>
+                                    <Button variant="secondary" className="me-2" onClick={handleBack}>
+                                        <BiArrowBack /> Back
+                                    </Button>
                                     <button
                                         type="submit"
                                         className="btn btn-primary"

@@ -111,6 +111,7 @@ import BackupPages from './components/backups/BackupPages';
 import DebitNotePrint from './components/retailer/debitNote/Print';
 import EditDebitNote from './components/retailer/debitNote/EditDebitNote';
 import DebitNoteNumberForm from './components/retailer/debitNote/VoucherNumber';
+import { StatementProvider } from './context/StatementContext';
 
 function AppContent() {
   const { currentUser } = useAuth();
@@ -925,7 +926,9 @@ function App() {
   return (
     <LoadingProvider>
       <AuthProvider>
+        <StatementProvider>
         <AppContent />
+        </StatementProvider>
       </AuthProvider>
     </LoadingProvider>
   );

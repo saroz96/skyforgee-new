@@ -12,6 +12,8 @@ import AccountBalanceDisplay from '../payment/AccountBalanceDisplay';
 
 import useDebounce from '../../../hooks/useDebounce';
 import VirtualizedItemList from '../../VirtualizedItemList';
+import { Button } from 'react-bootstrap';
+import { BiArrowBack } from 'react-icons/bi';
 
 const EditSalesQuotation = () => {
     const { id } = useParams();
@@ -802,6 +804,10 @@ const EditSalesQuotation = () => {
             window.removeEventListener('keydown', handleF6KeyForItems);
         };
     }, []);
+
+    const handleBack = () => {
+        navigate(-1);
+    };
 
     const ItemDropdown = React.useMemo(() => {
         if (!showItemDropdown) return null;
@@ -1710,6 +1716,9 @@ const EditSalesQuotation = () => {
                             </div>
 
                             <div className="d-flex justify-content-end mt-4">
+                                <Button variant="secondary" className="me-2" onClick={handleBack}>
+                                    <BiArrowBack /> Back
+                                </Button>
                                 <button
                                     type="button"
                                     className="btn btn-primary mr-2 p-3"

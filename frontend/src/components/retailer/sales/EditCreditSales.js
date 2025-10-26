@@ -12,6 +12,8 @@ import AccountBalanceDisplay from '../payment/AccountBalanceDisplay';
 
 import useDebounce from '../../../hooks/useDebounce';
 import VirtualizedItemList from '../../VirtualizedItemList';
+import { Button } from 'react-bootstrap';
+import { BiArrowBack } from 'react-icons/bi';
 
 const EditCreditSales = () => {
     // const { id: billId } = useParams();
@@ -251,6 +253,10 @@ const EditCreditSales = () => {
             setFilteredItems(filtered);
         }
     }, [formData.isVatExempt, allItems]);
+
+    const handleBack = () => {
+        navigate(-1);
+    };
 
     const handleAccountSearch = (e) => {
         const searchText = e.target.value.toLowerCase();
@@ -1734,6 +1740,9 @@ const EditCreditSales = () => {
                         </div>
 
                         <div className="d-flex justify-content-end mt-4">
+                            <Button variant="secondary" className="me-2" onClick={handleBack}>
+                                <BiArrowBack /> Back
+                            </Button>
                             <button
                                 type="submit"
                                 className="btn btn-primary mr-2 p-3"

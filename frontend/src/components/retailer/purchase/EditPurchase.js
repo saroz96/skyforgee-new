@@ -12,6 +12,8 @@ import ProductModal from '../dashboard/modals/ProductModal';
 import AccountBalanceDisplay from '../payment/AccountBalanceDisplay';
 import useDebounce from '../../../hooks/useDebounce';
 import VirtualizedItemList from '../../VirtualizedItemList';
+import { Button } from 'react-bootstrap';
+import { BiArrowBack } from 'react-icons/bi';
 
 
 const EditPurchase = () => {
@@ -888,6 +890,10 @@ const EditPurchase = () => {
         } catch (error) {
             console.error('Error fetching purchase transactions:', error);
         }
+    };
+
+    const handleBack = () => {
+        navigate(-1);
     };
 
     const openSalesPriceModal = (index) => {
@@ -1889,6 +1895,9 @@ const EditPurchase = () => {
                         </div>
 
                         <div className="d-flex justify-content-end mt-4">
+                            <Button variant="secondary" className="me-2" onClick={handleBack}>
+                                <BiArrowBack /> Back
+                            </Button>
                             <button
                                 type="submit"
                                 className="btn btn-primary mr-2 p-3"

@@ -170,6 +170,14 @@ const transactionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Account',
     },
+    InstType: {
+        type: String,
+        enum: ['N/A', 'RTGS', 'Fonepay', 'Cheque', 'Connect-Ips', 'Esewa', 'Khalti']
+    },
+    bankAcc: { type: String },
+    InstNo: {
+        type: String
+    },
     fiscalYear: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'FiscalYear' // New field to reference the current fiscal year

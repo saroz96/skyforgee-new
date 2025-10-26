@@ -6,6 +6,8 @@ import NotificationToast from '../../NotificationToast';
 import Header from '../Header';
 import Loader from '../../Loader';
 import AccountBalanceDisplay from '../payment/AccountBalanceDisplay';
+import { Button } from 'react-bootstrap';
+import { BiArrowBack } from 'react-icons/bi';
 
 const EditDebitNote = () => {
     const { id } = useParams();
@@ -322,6 +324,10 @@ const EditDebitNote = () => {
                 });
             }
         }
+    };
+
+    const handleBack = () => {
+        navigate(-1);
     };
 
     const handleReactivateVoucher = async () => {
@@ -899,6 +905,9 @@ const EditDebitNote = () => {
                                     <i className="fas fa-info-circle me-1"></i>
                                 </div>
                                 <div>
+                                    <Button variant="secondary" className="me-2" onClick={handleBack}>
+                                        <BiArrowBack /> Back
+                                    </Button>
                                     <button
                                         type="submit"
                                         id='saveBill'
@@ -913,7 +922,7 @@ const EditDebitNote = () => {
                                         ) : (
                                             <>
                                                 <i className="fas fa-save me-2"></i>
-                                                Update Debit Note
+                                                Update
                                             </>
                                         )}
                                     </button>
